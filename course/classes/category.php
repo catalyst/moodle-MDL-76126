@@ -2743,6 +2743,7 @@ class core_course_category implements renderable, cacheable_object, IteratorAggr
         $record->ctxlevel = CONTEXT_COURSECAT;
         $record->ctxinstance = $record->id;
         $record->ctxlocked = $a['xl'];
+        $record->ctxdisguiseid = $a['disguiseid'] ?? 0;
         return new self($record, true);
     }
 

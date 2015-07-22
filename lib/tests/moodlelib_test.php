@@ -2676,6 +2676,7 @@ EOF;
             'path'         => $obj->path,
             'depth'        => $obj->depth,
             'locked'       => $obj->locked,
+            'disguiseid'   => $obj->disguiseid,
         );
         $this->assertEquals(convert_to_array($obj), $ar);
     }
