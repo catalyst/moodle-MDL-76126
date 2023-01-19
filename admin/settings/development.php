@@ -33,6 +33,11 @@ if ($hassiteconfig) { // speedup for non-admins, add all caps used on this page
         new lang_string('enablecourserelativedates', 'core_admin'),
         new lang_string('enablecourserelativedates_desc', 'core_admin'), 0));
 
+    // User disguise.
+    $temp->add(new admin_setting_configcheckbox('enableuserdisguise',
+        new lang_string('enableuserdisguise', 'core_admin'),
+        new lang_string('enableuserdisguise_desc', 'core_admin'), 0));
+
     $ADMIN->add('experimental', $temp);
 
     // "debugging" settingpage

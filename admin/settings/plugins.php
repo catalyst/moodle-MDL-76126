@@ -778,8 +778,8 @@ if ($hassiteconfig) {
     }
 }
 
-// Add user disguises.
-if ($hassiteconfig) {
+// Add user disguises if it is enabled.
+if ($hassiteconfig && isset($CFG->enableuserdisguise) && $CFG->enableuserdisguise) {
     $ADMIN->add('modules', new admin_category('disguiseplugins', new lang_string('disguiseplugins')));
     $ADMIN->add('disguiseplugins', new admin_externalpage('managedisguiseplugins', new lang_string('disguisepluginsmanage'),
                                                         $CFG->wwwroot . '/' . $CFG->admin . '/disguiseplugins.php'));

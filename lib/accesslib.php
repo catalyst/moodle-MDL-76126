@@ -4560,7 +4560,7 @@ function role_get_name(stdClass $role, $context = null, $rolenamedisplay = ROLEN
     }
 
     if ($rolenamedisplay == ROLENAME_ALIAS) {
-        if ($coursecontext && $role->coursealias && trim($role->coursealias) !== '') {
+        if ($coursecontext and trim($role->coursealias) !== '') {
             return format_string($role->coursealias, true, array('context'=>$coursecontext));
         } else {
             return $original;
@@ -4568,7 +4568,7 @@ function role_get_name(stdClass $role, $context = null, $rolenamedisplay = ROLEN
     }
 
     if ($rolenamedisplay == ROLENAME_BOTH) {
-        if ($coursecontext && $role->coursealias && trim($role->coursealias) !== '') {
+        if ($coursecontext and trim($role->coursealias) !== '') {
             return format_string($role->coursealias, true, array('context'=>$coursecontext)) . " ($original)";
         } else {
             return $original;
@@ -6155,6 +6155,13 @@ abstract class context extends stdClass implements IteratorAggregate {
      * @return bool
      */
     public function has_disguise() {
+        global $CFG;
+
+        // No disguise if it is not enabled.
+        if (empty($CFG->enableuserdisguise)) {
+            return false;
+        }
+
         $inheritteddisguiseid = $this->inheritteddisguiseid;
         return !empty($inheritteddisguiseid);
     }
@@ -6165,7 +6172,14 @@ abstract class context extends stdClass implements IteratorAggregate {
      * @return bool
      */
     public function has_own_disguise() {
-        return !empty($this->disguiseid);
+        global $CFG;
+
+        // No disguise if it is not enabled.
+        if (empty($CFG->enableuserdisguise)) {
+            return false;
+        }
+
+        return !empty($this->_disguiseid);
     }
 }
 

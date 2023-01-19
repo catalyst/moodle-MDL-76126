@@ -215,8 +215,8 @@ abstract class moodleform_mod extends moodleform {
         $this->_features->advancedgrading   = plugin_supports('mod', $this->_modname, FEATURE_ADVANCED_GRADING, false);
         $this->_features->hasnoview         = plugin_supports('mod', $this->_modname, FEATURE_NO_VIEW_LINK, false);
         $this->_features->canrescale = (component_callback_exists('mod_' . $this->_modname, 'rescale_activity_grades') !== false);
-        $this->_features->disguises         = plugin_supports('mod', $this->_modname, FEATURE_DISGUISES, false);
-        $this->_features->disguisesoptional = plugin_supports('mod', $this->_modname, FEATURE_DISGUISES_OPTIONAL, false);
+        $this->_features->disguises         = $CFG->enableuserdisguise && plugin_supports('mod', $this->_modname, FEATURE_DISGUISES, false);
+        $this->_features->disguisesoptional = $CFG->enableuserdisguise && plugin_supports('mod', $this->_modname, FEATURE_DISGUISES_OPTIONAL, false);
     }
 
     /**
