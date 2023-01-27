@@ -103,17 +103,20 @@ class report_log_table_log extends table_sql {
      * This function is useful because, in the unlikely case that the user is
      * not already loaded in $this->userfullnames it will fetch it from db.
      *
-     * @since Moodle 2.9
      * @param int $userid
+     * @param int $contextid the context where the user is being displayed
      * @return string|false
+     * @throws coding_exception
+     * @throws dml_exception
+     * @since Moodle 2.9
      */
-    protected function get_user_fullname($userid) {
+    protected function get_user_fullname($userid, $contextid) {
         if (empty($userid)) {
             return false;
         }
 
         // Check if we already have this users' fullname.
-        $userfullname = $this->userfullnames[$userid] ?? null;
+        $userfullname = $this->userfullnames[$contextid][$userid] ?? null;
         if (!empty($userfullname)) {
             return $userfullname;
         }
@@ -127,12 +130,13 @@ class report_log_table_log extends table_sql {
         $userfieldsapi = \core_user\fields::for_name();
         $fields = $userfieldsapi->get_sql('', false, '', '', false)->selects;
         if ($user = \core_user::get_user($userid, $fields)) {
-            $this->userfullnames[$userid] = fullname($user, has_capability('moodle/site:viewfullnames', $this->get_context()));
+            $context = context::instance_by_id($contextid, IGNORE_MISSING) ?: null;
+            $this->userfullnames[$contextid][$userid] = fullname($user, has_capability('moodle/site:viewfullnames', $this->get_context()), $context);
         } else {
-            $this->userfullnames[$userid] = false;
+            $this->userfullnames[$contextid][$userid] = false;
         }
 
-        return $this->userfullnames[$userid];
+        return $this->userfullnames[$contextid][$userid];
     }
 
     /**
@@ -154,7 +158,7 @@ class report_log_table_log extends table_sql {
     /**
      * Generate the username column.
      *
-     * @param stdClass $event event data.
+     * @param \core\event\base $event event data.
      * @return string HTML for the username column
      */
     public function col_fullnameuser($event) {
@@ -164,30 +168,32 @@ class report_log_table_log extends table_sql {
         // Add username who did the action.
         if (!empty($logextra['realuserid'])) {
             $a = new stdClass();
-            if (!$a->realusername = $this->get_user_fullname($logextra['realuserid'])) {
+            if (!$a->realusername = $this->get_user_fullname($logextra['realuserid'], $event->contextid)) {
                 $a->realusername = '-';
             }
-            if (!$a->asusername = $this->get_user_fullname($event->userid)) {
+            if (!$a->asusername = $this->get_user_fullname($event->get_unmasked_userid(), $event->contextid)) {
                 $a->asusername = '-';
             }
             if (empty($this->download)) {
-                $params = array('id' => $logextra['realuserid']);
-                if ($event->courseid) {
-                    $params['course'] = $event->courseid;
-                }
-                $a->realusername = html_writer::link(new moodle_url('/user/view.php', $params), $a->realusername);
-                $params['id'] = $event->userid;
-                $a->asusername = html_writer::link(new moodle_url('/user/view.php', $params), $a->asusername);
+                // Build profile link according to event context.
+                $context = context::instance_by_id($event->contextid, IGNORE_MISSING) ?: null;
+
+                $a->realusername = html_writer::link(\core_user::profile_url($logextra['realuserid'], $context),
+                    $a->realusername);
+
+                $a->asusername = html_writer::link(\core_user::profile_url($event->get_unmasked_userid(), $context),
+                    $a->realusername);
             }
             $username = get_string('eventloggedas', 'report_log', $a);
 
-        } else if (!empty($event->userid) && $username = $this->get_user_fullname($event->userid)) {
+        } else if (!empty($event->get_unmasked_userid())
+            && $username = $this->get_user_fullname($event->get_unmasked_userid(), $event->contextid)) {
             if (empty($this->download)) {
-                $params = array('id' => $event->userid);
-                if ($event->courseid) {
-                    $params['course'] = $event->courseid;
-                }
-                $username = html_writer::link(new moodle_url('/user/view.php', $params), $username);
+                // Build profile link according to event context.
+                $context = context::instance_by_id($event->contextid, IGNORE_MISSING) ?: null;
+
+                $username = html_writer::link(\core_user::profile_url($event->get_unmasked_userid(), $context),
+                    $username);
             }
         } else {
             $username = '-';
@@ -198,14 +204,15 @@ class report_log_table_log extends table_sql {
     /**
      * Generate the related username column.
      *
-     * @param stdClass $event event data.
+     * @param \core\event\base $event event data.
      * @return string HTML for the related username column
      */
     public function col_relatedfullnameuser($event) {
         // Add affected user.
-        if (!empty($event->relateduserid) && $username = $this->get_user_fullname($event->relateduserid)) {
+        if (!empty($event->get_unmasked_relateduserid())
+            && $username = $this->get_user_fullname($event->get_unmasked_relateduserid(), $event->contextid)) {
             if (empty($this->download)) {
-                $params = array('id' => $event->relateduserid);
+                $params = array('id' => $event->get_unmasked_relateduserid());
                 if ($event->courseid) {
                     $params['course'] = $event->courseid;
                 }
@@ -570,39 +577,51 @@ class report_log_table_log extends table_sql {
 
         $this->userfullnames = array();
         $userids = array();
+        $contexts = array();
 
         // For each event cache full username.
-        // Get list of userids which will be shown in log report.
+        // Get list of userids and contexts which will be shown in log report.
         foreach ($this->rawdata as $event) {
             $logextra = $event->get_logextra();
-            if (!empty($event->userid) && empty($userids[$event->userid])) {
-                $userids[$event->userid] = $event->userid;
+            if (!empty($event->get_unmasked_userid()) && empty($userids[$event->get_unmasked_userid()])) {
+                $userids[$event->get_unmasked_userid()] = $event->get_unmasked_userid();
             }
             if (!empty($logextra['realuserid']) && empty($userids[$logextra['realuserid']])) {
                 $userids[$logextra['realuserid']] = $logextra['realuserid'];
             }
-            if (!empty($event->relateduserid) && empty($userids[$event->relateduserid])) {
-                $userids[$event->relateduserid] = $event->relateduserid;
+            if (!empty($event->get_unmasked_relateduserid()) && empty($userids[$event->get_unmasked_relateduserid()])) {
+                $userids[$event->get_unmasked_relateduserid()] = $event->get_unmasked_relateduserid();
             }
+
+            // Add userids to their relevant context.
+            $contexts[$event->contextid] = $userids;
         }
         $this->rawdata->close();
 
-        // Get user fullname and put that in return list.
-        if (!empty($userids)) {
-            list($usql, $uparams) = $DB->get_in_or_equal($userids);
-            $userfieldsapi = \core_user\fields::for_name();
-            $users = $DB->get_records_sql("SELECT id," . $userfieldsapi->get_sql('', false, '', '', false)->selects .
+        // Build username for each context.
+        foreach ($contexts as $contextid => $userids) {
+            // Get user fullname and put that in return list.
+            if (!empty($userids)) {
+                list($usql, $uparams) = $DB->get_in_or_equal($userids);
+                $userfieldsapi = \core_user\fields::for_name();
+                $users = $DB->get_records_sql("SELECT id," . $userfieldsapi->get_sql('', false, '', '', false)->selects .
                     " FROM {user} WHERE id " . $usql,
                     $uparams);
-            foreach ($users as $userid => $user) {
-                $this->userfullnames[$userid] = fullname($user, has_capability('moodle/site:viewfullnames', $this->get_context()));
-                unset($userids[$userid]);
-            }
 
-            // We fill the array with false values for the users that don't exist anymore
-            // in the database so we don't need to query the db again later.
-            foreach ($userids as $userid) {
-                $this->userfullnames[$userid] = false;
+                $context = context::instance_by_id($contextid, IGNORE_MISSING) ?: null;
+                $this->userfullnames[$contextid] = array();
+                foreach ($users as $userid => $user) {
+                    // If user can view fullnames in this context.
+                    $fullname = fullname($user, has_capability('moodle/site:viewfullnames', $this->get_context()), $context);
+                    $this->userfullnames[$contextid][$userid] = $fullname;
+                    unset($userids[$userid]);
+                }
+
+                // We fill the array with false values for the users that don't exist anymore
+                // in the database so we don't need to query the db again later.
+                foreach ($userids as $userid) {
+                    $this->userfullnames[$contextid][$userid] = false;
+                }
             }
         }
     }
