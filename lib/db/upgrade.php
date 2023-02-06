@@ -2984,5 +2984,31 @@ privatefiles,moodle|/user/files.php';
         upgrade_main_savepoint(true, 2023020800.00);
     }
 
+    if ($oldversion < 2023021700.01) {
+
+        // Define table userdetails to be created.
+        $table = new xmldb_table('userdetails');
+
+        // Adding fields to table userdetails.
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('plugin', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('active', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '1');
+        $table->add_field('sortorder', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+
+        // Adding keys to table userdetails.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
+
+        // Add index to table userdetails.
+        $table->add_index('plugin', XMLDB_INDEX_UNIQUE, array('plugin'));
+
+        // Conditionally launch create table for userdetails.
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Main savepoint reached.
+        upgrade_main_savepoint(true, 2023021700.01);
+    }
+
     return true;
 }

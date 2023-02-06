@@ -2055,6 +2055,10 @@ class core_plugin_manager {
                 'usertours', 'xmldb'
             ),
 
+            'userdetails' =>  array(
+
+            ),
+
             'webservice' => array(
                 'rest', 'soap'
             ),

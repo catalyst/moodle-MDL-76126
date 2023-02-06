@@ -16,6 +16,7 @@
         "format": "course\/format",
         "dataformat": "dataformat",
         "profilefield": "user\/profile\/field",
+        "userdetails": "user\/userdetails\/plugins",
         "report": "report",
         "coursereport": "course\/report",
         "gradeexport": "grade\/export",

@@ -897,6 +897,20 @@
         <INDEX NAME="alternatename" UNIQUE="false" FIELDS="alternatename"/>
       </INDEXES>
     </TABLE>
+    <TABLE NAME="userdetails" COMMENT="Plugins of user details type">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="plugin" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false" COMMENT="Name of the plugin"/>
+        <FIELD NAME="active" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false" COMMENT="Whether the plugin is enabled or not"/>
+        <FIELD NAME="sortorder" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="plugin" UNIQUE="true" FIELDS="plugin"/>
+      </INDEXES>
+    </TABLE>
     <TABLE NAME="user_preferences" COMMENT="Allows modules to store arbitrary user preferences">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>

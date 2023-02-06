@@ -100,6 +100,7 @@ if ($hassiteconfig
     $ADMIN->add('accounts', $temp);
 
     $ADMIN->add('accounts', new admin_externalpage('profilefields', new lang_string('profilefields','admin'), "$CFG->wwwroot/user/profile/index.php", 'moodle/site:config'));
+    $ADMIN->add('accounts', new admin_externalpage('userdetails', new lang_string('userdetails','admin'), "$CFG->wwwroot/user/userdetails/index.php", 'moodle/site:config'));
     $ADMIN->add('accounts', new admin_externalpage('cohorts', new lang_string('cohorts', 'cohort'), $CFG->wwwroot . '/cohort/index.php', array('moodle/cohort:manage', 'moodle/cohort:view')));
 
 
