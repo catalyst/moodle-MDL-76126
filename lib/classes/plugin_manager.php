@@ -2061,7 +2061,7 @@ class core_plugin_manager {
             ),
 
             'userdetails' =>  array(
-                'basic'
+                'basic', 'disguise'
             ),
 
             'webservice' => array(
