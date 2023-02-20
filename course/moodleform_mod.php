@@ -727,7 +727,9 @@ abstract class moodleform_mod extends moodleform {
         }
 
         if ($this->_features->disguises) {
-            \core\disguise\helper::add_to_form($mform, $this->_features, $this->_cm);
+            // Course module context.
+            $context = context_module::instance($this->_cm->id);
+            \core\disguise\helper::add_to_form($mform, $this->_features, $context);
         }
 
         // Conditional activities: completion tracking section

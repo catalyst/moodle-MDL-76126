@@ -338,6 +338,14 @@ class course_edit_form extends moodleform {
 
         enrol_course_edit_form($mform, $course, $context);
 
+        // Add disguise feature to a course settings form.
+        if ($coursecontext) {
+            $feature = new stdClass();
+            $feature->disguisesoptional = true;
+            // Course context.
+            \core\disguise\helper::add_to_form($mform, $feature, $coursecontext);
+        }
+
         $mform->addElement('header','groups', get_string('groupsettingsheader', 'group'));
 
         $choices = array();

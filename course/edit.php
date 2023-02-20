@@ -157,6 +157,15 @@ $args = array(
     'returnurl' => $returnurl
 );
 $editform = new course_edit_form(null, $args);
+
+// Set disguise data.
+if ($id) {
+    $context = context_course::instance($id);
+    $data = new stdClass();
+    \core\disguise\helper::add_form_values($context, $data);
+    $editform->set_data($data);
+}
+
 if ($editform->is_cancelled()) {
     // The form has been cancelled, take them back to what ever the return to is.
     redirect($returnurl);
@@ -192,6 +201,11 @@ if ($editform->is_cancelled()) {
         // Set the URL to take them too if they choose save and display.
         $courseurl = new moodle_url('/course/view.php', array('id' => $course->id));
     }
+
+    // Get the context of the newly created course or the existing one.
+    $context = context_course::instance($course->id, MUST_EXIST);
+    // Set disguise configuration to the context.
+    \core\disguise\helper::handle_form_submission($context, $data);
 
     if (isset($data->saveanddisplay)) {
         // Redirect user to newly created/updated course.

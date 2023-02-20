@@ -1183,8 +1183,8 @@ class core_course_renderer extends plugin_renderer_base {
                     return $role->displayname;
                 }, $coursecontact['roles']);
                 $name = html_writer::tag('span', implode(", ", $rolenames).': ', ['class' => 'font-weight-bold']);
-                $name .= html_writer::link(new moodle_url('/user/view.php',
-                        ['id' => $coursecontact['user']->id, 'course' => SITEID]),
+                $name .= html_writer::link(core_user::profile_url($coursecontact['user'],
+                    context_system::instance()),
                         $coursecontact['username']);
                 $content .= html_writer::tag('li', $name);
             }
@@ -1232,7 +1232,7 @@ class core_course_renderer extends plugin_renderer_base {
                     return $role->displayname;
                 }, $coursecontact['roles']);
 
-                $profileurl = \core_user::profile_url($coursecontact['user'], context_course::instance($course->id), [], SITEID);
+                $profileurl = \core_user::profile_url($coursecontact['user'], context_course::instance($course->id));
                 if ($profileurl) {
                     $profileurlname = html_writer::link($profileurl, $coursecontact['username']);
                 } else {
