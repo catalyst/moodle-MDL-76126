@@ -1226,4 +1226,95 @@ class core_user {
         };
         return null;
     }
+
+    /**
+     * Run a dynamic function with function name as a parameter.
+     *
+     * @param string $functionname The function name to be called.
+     */
+    public static function get_user_details($user, \context $context = null,
+                                            array $options, string $functionname): string {
+        // Make sure we have a user object.
+        $user = is_object($user) ? $user : self::get_user($user);
+
+        // Use basic class only.
+        if (isset($options["core_only"])) {
+            $classname = \core\plugininfo\userdetails::get_classname("basic");
+            $plugin = new $classname();
+            return $plugin->$functionname($user, $context, $options);
+        }
+
+        // Return user details.
+        $plugins = \core\plugininfo\userdetails::get_enabled_plugins();
+        foreach ($plugins as $pluginname) {
+            $classname = \core\plugininfo\userdetails::get_classname($pluginname);
+            $plugin = new $classname();
+            // Check if the function exists in a class.
+            if (method_exists($classname, $functionname)) {
+                $userdetails = $plugin->$functionname($user, $context, $options);
+                if (!empty($userdetails)) {
+                    return $userdetails;
+                }
+            }
+        }
+        return '';
+    }
+
+    /**
+     * Returns a persons full name depending on the user details plugins.
+     *
+     * @param int|stdClass $user A {@link $USER} object to get full name of.
+     * @param context|null $context The context at which the user is being displayed
+     * @param array $options The options to configure how the name is displayed
+     *
+     * @return string
+     */
+    public static function displayname($user, \context $context = null, array $options = []) {
+        return self::get_user_details($user, $context, $options, 'get_full_name');
+    }
+
+    /**
+     * Returns a profile url for a user depending on user details plugins.
+     */
+    public static function profile_url($user, \context $context = null, array $options = []) {
+        return self::get_user_details($user, $context, $options, 'get_profile_url');
+    }
+
+    /**
+     * Returns a profile picture for a user depending on user details plugins.
+     */
+    public static function profile_picture($user, \context $context = null, array $options = []) {
+        return self::get_user_details($user, $context, $options, 'get_profile_picture');
+    }
+
+    /**
+     * Returns real display name for a user depending on user details plugins.
+     *
+     */
+    public static function real_displayname($user, \context $context = null, array $options = []) {
+        $options["core_only"] = true;
+        return self::get_user_details($user, $context, $options, 'get_full_name');
+    }
+
+    /**
+     * Return user id.
+     */
+    public static function user_id($user, \context $context = null, array $options = []) {
+        return self::get_user_details($user, $context, $options, 'get_user_id');
+    }
+
+    /**
+     * Return user email.
+     */
+    public static function user_email($user, \context $context = null, array $options = []) {
+        return self::get_user_details($user, $context, $options, 'get_user_email');
+    }
+
+    /**
+     * Return ip address depending on user details plugins.
+     */
+    public static function ip_address($user, \context $context = null, array $options = []) {
+        return self::get_user_details($user, $context, $options, 'get_ip_address');
+    }
+
 }
