@@ -5593,14 +5593,16 @@ abstract class context extends stdClass implements IteratorAggregate {
     /**
      * Set the disguise for the current context.
      *
-     * @param int $disguiseid
+     * @param \core\disguise\disguise $disguise
      * @return disguise ID
      */
     public function set_disguise(\core\disguise\disguise $disguise) {
         global $DB;
 
+        debugging("Setting disguise to " . $disguise->get_id(), DEBUG_DEVELOPER);
+
         if ($this->_disguiseid === $disguise->get_id()) {
-            return $disguiseid;
+            return $this->_disguiseid;
         }
 
         $this->_disguiseid = $disguise->get_id();
@@ -6105,7 +6107,7 @@ abstract class context extends stdClass implements IteratorAggregate {
     }
 
     /**
-     * Fetch the disguise instance for this contet.
+     * Fetch the disguise instance for this context.
      *
      * @return \core\disguise\disguise
      */
@@ -6128,8 +6130,8 @@ abstract class context extends stdClass implements IteratorAggregate {
      * @return int
      */
     protected function get_inheritteddisguiseid() {
-        if (!empty($this->disguiseid)) {
-            return $this->disguiseid;
+        if (!empty($this->_disguiseid)) {
+            return $this->_disguiseid;
         }
 
         if (!empty($this->_inheritteddisguiseid)) {
@@ -6148,8 +6150,7 @@ abstract class context extends stdClass implements IteratorAggregate {
     }
 
     /**
-     * Whether a context is applied to this context, or any of its parent
-     * contexts.
+     * Whether a disguise is applied to this context, or any of its parent contexts.
      *
      * @return bool
      */
@@ -6159,7 +6160,7 @@ abstract class context extends stdClass implements IteratorAggregate {
     }
 
     /**
-     * Whether a context is applied directly to this context.
+     * Whether a disguise is applied directly to this context.
      *
      * @return bool
      */

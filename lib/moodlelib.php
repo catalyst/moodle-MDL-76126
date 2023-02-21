@@ -454,6 +454,16 @@ define('FEATURE_USES_QUESTIONS', 'usesquestions');
  */
 define('MAX_FILENAME_SIZE', 100);
 
+/**
+ * True if context supports user disguises.
+ */
+define('FEATURE_DISGUISES', 'userdisguises');
+
+/**
+ * True if context supports optional user disguises.
+ */
+define('FEATURE_DISGUISES_OPTIONAL', 'userdisguisesoptional');
+
 /** Unspecified module archetype */
 define('MOD_ARCHETYPE_OTHER', 0);
 /** Resource-like type module */
@@ -3594,12 +3604,12 @@ function ismoving($courseid) {
  * @param bool $override If true then the alternativefullnameformat format rather than fullnamedisplay format will be used.
  * @return string
  */
-function fullname($user, $override=false, $context = null) {
+function fullname($user, $override=false) {
     global $PAGE;
     $options = array(
             'usefullnamedisplay' => $override,
         );
-    return core_user::displayname($user, $context, $options);
+    return core_user::displayname($user, null, $options);
 }
 
 /**
