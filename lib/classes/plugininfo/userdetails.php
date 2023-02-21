@@ -40,6 +40,12 @@ class userdetails extends base {
      * @return bool
      */
     public function is_uninstall_allowed() {
+        global $DB;
+
+        if (in_array($this->name, array('basic', 'disguise'))) {
+            return false;
+        }
+
         return true;
     }
 
