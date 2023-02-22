@@ -1226,4 +1226,434 @@ class core_user {
         };
         return null;
     }
+
+    /**
+     * Return full name depending on context.
+     * This function should be used for displaying purposes only as the details may not be the same as it is on database.
+     *
+     * @param int|stdClass $user A {@link $USER} object to get ip address of.
+     * @param context|null $context The context at which the user info is being displayed
+     * @param array $options The options to configure how the info is displayed
+     * @return string Full name of the user
+     */
+    public static function display_name($user, \context $context = null, array $options = []): string {
+        global $CFG, $SESSION;
+
+        // Make sure we have a user object.
+        $user = is_object($user) ? $user : self::get_user($user);
+
+        // Whether to use alternativefullnameformat or fullnamedisplay.
+        $override = !isset($options["usefullnamedisplay"]) || !$options["usefullnamedisplay"];
+
+        if (!isset($user->firstname) and !isset($user->lastname)) {
+            return '';
+        }
+
+        // Get all of the name fields.
+        $allnames = \core_user\fields::get_name_fields();
+        if ($CFG->debugdeveloper) {
+            foreach ($allnames as $allname) {
+                if (!property_exists($user, $allname)) {
+                    // If all the user name fields are not set in the user object, then notify the programmer that it needs to be fixed.
+                    debugging('You need to update your sql to include additional name fields in the user object.', DEBUG_DEVELOPER);
+                    // Message has been sent, no point in sending the message multiple times.
+                    break;
+                }
+            }
+        }
+
+        if (!$override) {
+            if (!empty($CFG->forcefirstname)) {
+                $user->firstname = $CFG->forcefirstname;
+            }
+            if (!empty($CFG->forcelastname)) {
+                $user->lastname = $CFG->forcelastname;
+            }
+        }
+
+        if (!empty($SESSION->fullnamedisplay)) {
+            $CFG->fullnamedisplay = $SESSION->fullnamedisplay;
+        }
+
+        $template = null;
+        // If the fullnamedisplay setting is available, set the template to that.
+        if (isset($CFG->fullnamedisplay)) {
+            $template = $CFG->fullnamedisplay;
+        }
+        // If the template is empty, or set to language, return the language string.
+        if ((empty($template) || $template == 'language') && !$override) {
+            return get_string('fullnamedisplay', null, $user);
+        }
+
+        // Check to see if we are displaying according to the alternative full name format.
+        if ($override) {
+            if (empty($CFG->alternativefullnameformat) || $CFG->alternativefullnameformat == 'language') {
+                // Default to show just the user names according to the fullnamedisplay string.
+                return get_string('fullnamedisplay', null, $user);
+            } else {
+                // If the override is true, then change the template to use the complete name.
+                $template = $CFG->alternativefullnameformat;
+            }
+        }
+
+        $requirednames = array();
+        // With each name, see if it is in the display name template, and add it to the required names array if it is.
+        foreach ($allnames as $allname) {
+            if (strpos($template, $allname) !== false) {
+                $requirednames[] = $allname;
+            }
+        }
+
+        $displayname = $template;
+        // Switch in the actual data into the template.
+        foreach ($requirednames as $altname) {
+            if (isset($user->$altname)) {
+                // Using empty() on the below if statement causes breakages.
+                if ((string)$user->$altname == '') {
+                    $displayname = str_replace($altname, 'EMPTY', $displayname);
+                } else {
+                    $displayname = str_replace($altname, $user->$altname, $displayname);
+                }
+            } else {
+                $displayname = str_replace($altname, 'EMPTY', $displayname);
+            }
+        }
+        // Tidy up any misc. characters (Not perfect, but gets most characters).
+        // Don't remove the "u" at the end of the first expression unless you want garbled characters when combining hiragana or
+        // katakana and parenthesis.
+        $patterns = array();
+        // This regular expression replacement is to fix problems such as 'James () Kirk' Where 'Tiberius' (middlename) has not been
+        // filled in by a user.
+        // The special characters are Japanese brackets that are common enough to make allowances for them (not covered by :punct:).
+        $patterns[] = '/[[:punct:]「」]*EMPTY[[:punct:]「」]*/u';
+        // This regular expression is to remove any double spaces in the display name.
+        $patterns[] = '/\s{2,}/u';
+        foreach ($patterns as $pattern) {
+            $displayname = preg_replace($pattern, ' ', $displayname);
+        }
+
+        // Trimming $displayname will help the next check to ensure that we don't have a display name with spaces.
+        $displayname = trim($displayname);
+        if (empty($displayname)) {
+            // Going with just the first name if no alternate fields are filled out. May be changed later depending on what
+            // people in general feel is a good setting to fall back on.
+            $displayname = $user->firstname;
+        }
+        return $displayname;
+    }
+
+    /**
+     * Return profile url depending on context.
+     * This function should be used for displaying purposes only as the details may not be the same as it is on database.
+     *
+     * @param int|stdClass $user A {@link $USER} object to get ip address of.
+     * @param context|null $context The context at which the user info is being displayed
+     * @param array $options The options to configure how the info is displayed
+     * @return string Profile url of the user
+     */
+    public static function display_profile_url($user, \context $context = null, array $options = []) {
+        // Make sure we have a user object.
+        $user = is_object($user) ? $user : self::get_user($user);
+
+        // Params to be passed to the user view page.
+        $params = ['id' => $user->id];
+
+        // Check if the context is a course context.
+        if (isset($context) && $context->contextlevel == CONTEXT_COURSE) {
+            // Course id to the params.
+            $params['courseid'] = $context->instanceid;
+        }
+
+        // Profile URL.
+        $url = new \moodle_url('/user/view.php', $params);
+
+        // Return the URL.
+        return $url->out(false);
+    }
+
+    /**
+     * Return user picture depending on context.
+     * This function should be used for displaying purposes only as the details may not be the same as it is on database.
+     *
+     * @param int|stdClass $user A {@link $USER} object to get ip address of.
+     * @param context|null $context The context at which the user info is being displayed
+     * @param array $options The options to configure how the info is displayed
+     * @return string User picture of the user
+     */
+    public static function display_profile_picture($user, \context $context = null, array $options = []) {
+        global $OUTPUT;
+
+        // Make sure we have a user object.
+        $user = is_object($user) ? $user : self::get_user($user);
+
+        // Create a new user picture object.
+        $userpicture = new \user_picture($user);
+
+        // Set the options.
+        foreach ((array) $options as $key => $value) {
+            if (property_exists($userpicture, $key)) {
+                $userpicture->$key = $value;
+            }
+        }
+
+        // Return the user picture.
+        return $OUTPUT->render($userpicture);
+    }
+
+    /**
+     * Return user id depending on context.
+     * This function should be used for displaying purposes only as the details may not be the same as it is on database.
+     *
+     * @param int|stdClass $user A {@link $USER} object to get ip address of.
+     * @param context|null $context The context at which the user info is being displayed
+     * @param array $options The options to configure how the info is displayed
+     * @return string User id of the user
+     */
+    public static function display_user_id($user, \context $context = null, array $options = []) {
+        // Make sure we have a user object.
+        $user = is_object($user) ? $user : self::get_user($user);
+
+        return $user->id;
+    }
+
+    /**
+     * Return email depending on context.
+     * This function should be used for displaying purposes only as the details may not be the same as it is on database.
+     *
+     * @param int|stdClass $user A {@link $USER} object to get ip address of.
+     * @param context|null $context The context at which the user info is being displayed
+     * @param array $options The options to configure how the info is displayed
+     * @return string Email of the user
+     */
+    public static function display_user_email($user, \context $context = null, array $options = []) {
+        // Make sure we have a user object.
+        $user = is_object($user) ? $user : self::get_user($user);
+
+        return $user->email;
+    }
+
+    /**
+     * Return ip address depending on context.
+     * This function should be used for displaying purposes only as the details may not be the same as it is on database.
+     *
+     * @param int|stdClass $user A {@link $USER} object to get ip address of.
+     * @param context|null $context The context at which the user info is being displayed
+     * @param array $options The options to configure how the info is displayed
+     * @return string Ip address of the user
+     */
+    public static function display_user_lastip($user, \context $context = null, array $options = []) {
+        // Make sure we have a user object.
+        $user = is_object($user) ? $user : self::get_user($user);
+
+        return $user->lastip;
+    }
+
+    /**
+     * Return user moodlenetprofile depending on context.
+     * This function should be used for displaying purposes only as the details may not be the same as it is on database.
+     *
+     * @param int|stdClass $user A {@link $USER} object to get ip address of.
+     * @param context|null $context The context at which the user info is being displayed
+     * @param array $options The options to configure how the info is displayed
+     * @return string moodlenetprofile of the user
+     */
+    public static function display_user_moodlenetprofile($user, \context $context = null, array $options = []) {
+        // Make sure we have a user object.
+        $user = is_object($user) ? $user : self::get_user($user);
+
+        return $user->moodlenetprofile;
+    }
+
+    /**
+     * Return user city depending on context.
+     * This function should be used for displaying purposes only as the details may not be the same as it is on database.
+     *
+     * @param int|stdClass $user A {@link $USER} object to get ip address of.
+     * @param context|null $context The context at which the user info is being displayed
+     * @param array $options The options to configure how the info is displayed
+     * @return string city of the user
+     */
+    public static function display_user_city($user, \context $context = null, array $options = []) {
+        // Make sure we have a user object.
+        $user = is_object($user) ? $user : self::get_user($user);
+
+        return $user->city;
+    }
+
+    /**
+     * Return user country depending on context.
+     * This function should be used for displaying purposes only as the details may not be the same as it is on database.
+     *
+     * @param int|stdClass $user A {@link $USER} object to get ip address of.
+     * @param context|null $context The context at which the user info is being displayed
+     * @param array $options The options to configure how the info is displayed
+     * @return string Country of the user
+     */
+    public static function display_user_country($user, \context $context = null, array $options = []) {
+        // Make sure we have a user object.
+        $user = is_object($user) ? $user : self::get_user($user);
+
+        return $user->country;
+    }
+
+    /**
+     * Return user timezone depending on context.
+     * This function should be used for displaying purposes only as the details may not be the same as it is on database.
+     *
+     * @param int|stdClass $user A {@link $USER} object to get ip address of.
+     * @param context|null $context The context at which the user info is being displayed
+     * @param array $options The options to configure how the info is displayed
+     * @return string timezone of the user
+     */
+    public static function display_user_timezone($user, \context $context = null, array $options = []) {
+        // Make sure we have a user object.
+        $user = is_object($user) ? $user : self::get_user($user);
+
+        return core_date::get_user_timezone($user);
+    }
+
+    /**
+     * Return user address depending on context.
+     * This function should be used for displaying purposes only as the details may not be the same as it is on database.
+     *
+     * @param int|stdClass $user A {@link $USER} object to get ip address of.
+     * @param context|null $context The context at which the user info is being displayed
+     * @param array $options The options to configure how the info is displayed
+     * @return string address of the user
+     */
+    public static function display_user_address($user, \context $context = null, array $options = []) {
+        // Make sure we have a user object.
+        $user = is_object($user) ? $user : self::get_user($user);
+
+        return $user->address;
+    }
+
+    /**
+     * Return user phone1 depending on context.
+     * This function should be used for displaying purposes only as the details may not be the same as it is on database.
+     *
+     * @param int|stdClass $user A {@link $USER} object to get ip address of.
+     * @param context|null $context The context at which the user info is being displayed
+     * @param array $options The options to configure how the info is displayed
+     * @return string phone1 of the user
+     */
+    public static function display_user_phone1($user, \context $context = null, array $options = []) {
+        // Make sure we have a user object.
+        $user = is_object($user) ? $user : self::get_user($user);
+
+        return $user->phone1;
+    }
+
+    /**
+     * Return user phone2 depending on context.
+     * This function should be used for displaying purposes only as the details may not be the same as it is on database.
+     *
+     * @param int|stdClass $user A {@link $USER} object to get ip address of.
+     * @param context|null $context The context at which the user info is being displayed
+     * @param array $options The options to configure how the info is displayed
+     * @return string phone2 of the user
+     */
+    public static function display_user_phone2($user, \context $context = null, array $options = []) {
+        // Make sure we have a user object.
+        $user = is_object($user) ? $user : self::get_user($user);
+
+        return $user->phone2;
+    }
+
+    /**
+     * Return user institution depending on context.
+     * This function should be used for displaying purposes only as the details may not be the same as it is on database.
+     *
+     * @param int|stdClass $user A {@link $USER} object to get ip address of.
+     * @param context|null $context The context at which the user info is being displayed
+     * @param array $options The options to configure how the info is displayed
+     * @return string institution of the user
+     */
+    public static function display_user_institution($user, \context $context = null, array $options = []) {
+        // Make sure we have a user object.
+        $user = is_object($user) ? $user : self::get_user($user);
+
+        return $user->institution;
+    }
+
+    /**
+     * Return user department depending on context.
+     * This function should be used for displaying purposes only as the details may not be the same as it is on database.
+     *
+     * @param int|stdClass $user A {@link $USER} object to get ip address of.
+     * @param context|null $context The context at which the user info is being displayed
+     * @param array $options The options to configure how the info is displayed
+     * @return string department of the user
+     */
+    public static function display_user_department($user, \context $context = null, array $options = []) {
+        // Make sure we have a user object.
+        $user = is_object($user) ? $user : self::get_user($user);
+
+        return $user->department;
+    }
+
+
+    /**
+     * Return user idnumber depending on context.
+     * This function should be used for displaying purposes only as the details may not be the same as it is on database.
+     *
+     * @param int|stdClass $user A {@link $USER} object to get ip address of.
+     * @param context|null $context The context at which the user info is being displayed
+     * @param array $options The options to configure how the info is displayed
+     * @return string id number of the user
+     */
+    public static function display_user_idnumber($user, \context $context = null, array $options = []) {
+        // Make sure we have a user object.
+        $user = is_object($user) ? $user : self::get_user($user);
+
+        return $user->idnumber;
+    }
+
+    /**
+     * Dynamic function to return user field depending on context.
+     *
+     * @param string $field The field to be returned
+     * @param int|stdClass $user A {@link $USER} object to get ip address of.
+     * @param context|null $context The context at which the user info is being displayed
+     * @param array $options The options to configure how the info is displayed
+     * @return string user info
+     */
+    public static function display_user_field($field, $user, \context $context = null, array $options = []) {
+        // Make sure we have a user object.
+        $user = is_object($user) ? $user : self::get_user($user);
+
+        // Check if the field is set.
+        if (isset($user->$field)) {
+            switch ($field) {
+                case 'country':
+                    return self::display_user_country($user, $context, $options);
+                case 'city':
+                    return self::display_user_city($user, $context, $options);
+                case 'address':
+                    return self::display_user_address($user, $context, $options);
+                case 'phone1':
+                    return self::display_user_phone1($user, $context, $options);
+                case 'phone2':
+                    return self::display_user_phone2($user, $context, $options);
+                case 'institution':
+                    return self::display_user_institution($user, $context, $options);
+                case 'department':
+                    return self::display_user_department($user, $context, $options);
+                case 'idnumber':
+                    return self::display_user_idnumber($user, $context, $options);
+                case 'email':
+                    return self::display_user_email($user, $context, $options);
+                case 'id':
+                    return self::display_user_id($user, $context, $options);
+                case 'lastip':
+                    return self::display_user_lastip($user, $context, $options);
+                default:
+                    return $user->$field;
+            }
+
+        }
+
+        return '';
+    }
+
 }
