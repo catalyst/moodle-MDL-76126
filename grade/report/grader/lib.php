@@ -722,7 +722,7 @@ class grade_report_grader extends grade_report {
 
             $fullname = fullname($user, $viewfullnames);
             $usercell->text = html_writer::link(
-                    new moodle_url('/user/view.php', ['id' => $user->id, 'course' => $this->course->id]),
+                    new moodle_url(\core_user::profile_url($user, context_course::instance($this->course->id))),
                     $usercell->text . $fullname,
                     ['class' => 'username']
             );

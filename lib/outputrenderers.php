@@ -2608,13 +2608,8 @@ class core_renderer extends renderer_base {
      * @return string HTML fragment
      */
     public function user_picture(stdClass $user, array $options = null) {
-        $userpicture = new user_picture($user);
-        foreach ((array)$options as $key=>$value) {
-            if (property_exists($userpicture, $key)) {
-                $userpicture->$key = $value;
-            }
-        }
-        return $this->render($userpicture);
+        // Todo: add context as parameter to this function.
+        return \core_user::profile_picture($user, null, $options);
     }
 
     /**

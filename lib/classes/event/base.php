@@ -207,7 +207,6 @@ abstract class base implements \IteratorAggregate {
         if (isset($data['anonymous'])) {
             $event->data['anonymous'] = $data['anonymous'];
         }
-        $event->data['anonymous'] = (int)(bool)$event->data['anonymous'];
 
         if (isset($event->context)) {
             if (isset($data['context'])) {
@@ -227,6 +226,12 @@ abstract class base implements \IteratorAggregate {
         $event->data['contextid'] = $event->context->id;
         $event->data['contextlevel'] = $event->context->contextlevel;
         $event->data['contextinstanceid'] = $event->context->instanceid;
+
+        if ($event->context->has_disguise() && $event->context->disguise->should_log_anonymously()) {
+            // There is a disguise at this context and it requests log anonymity.
+            $event->data['anonymous'] = true;
+        }
+        $event->data['anonymous'] = (int)(bool)$event->data['anonymous'];
 
         if (!isset($event->data['courseid'])) {
             if ($coursecontext = $event->context->get_course_context(false)) {
@@ -943,6 +948,12 @@ abstract class base implements \IteratorAggregate {
             debugging('level property is deprecated, use edulevel property instead', DEBUG_DEVELOPER);
             return $this->data['edulevel'];
         }
+
+        // Hide the user id and related userid from the event data if the context has disguise.
+        if ($name === 'userid' || $name === 'relateduserid') {
+            return \core_user::user_id($this->data[$name], $this->get_context());
+        }
+
         if (array_key_exists($name, $this->data)) {
             return $this->data[$name];
         }
@@ -999,5 +1010,23 @@ abstract class base implements \IteratorAggregate {
      */
     public static function is_deprecated() {
         return false;
+    }
+
+    /**
+     * Returns the userid regardless the context has disguise.
+     *
+     * @return int
+     */
+    public function get_unmasked_userid() {
+        return $this->data['userid'];
+    }
+
+    /**
+     * Returns the relateduserid regardless the context has disguise.
+     *
+     * @return int
+     */
+    public function get_unmasked_relateduserid() {
+        return $this->data['relateduserid'];
     }
 }

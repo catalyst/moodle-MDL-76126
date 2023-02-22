@@ -1860,6 +1860,11 @@ class core_plugin_manager {
                 'unoconv', 'googledrive'
             ),
 
+            'disguise' => array(
+                'basic',
+                'predefined',
+            ),
+
             'editor' => array(
                 'atto', 'textarea', 'tiny', 'tinymce'
             ),
@@ -2053,6 +2058,10 @@ class core_plugin_manager {
                 'mobile', 'moodlenet', 'multilangupgrade', 'monitor', 'oauth2', 'phpunit', 'policy', 'profiling', 'recyclebin',
                 'replace', 'spamcleaner', 'task', 'templatelibrary', 'uploadcourse', 'uploaduser', 'unsuproles',
                 'usertours', 'xmldb'
+            ),
+
+            'userdetails' =>  array(
+                'basic', 'disguise'
             ),
 
             'webservice' => array(

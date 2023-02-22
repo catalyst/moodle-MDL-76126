@@ -88,6 +88,9 @@ class core_user {
     /** @var int Indicates that user profile view should be allowed even if Moodle would prevent it */
     const VIEWPROFILE_FORCE_ALLOW = 1;
 
+    /** @var int Disguised user id  */
+    const DISGUISED_USER = -30;
+
     /** @var stdClass keep record of noreply user */
     public static $noreplyuser = false;
 
@@ -99,6 +102,9 @@ class core_user {
 
     /** @var array store user preferences cache. */
     protected static $preferencescache = null;
+
+    /** @var stdClass keep record of disguised user */
+    public static $disguiseduser = false;
 
     /**
      * Return user object from db or create noreply or support user,
@@ -492,6 +498,57 @@ class core_user {
         // Unset emailstop to make sure support message is sent.
         self::$supportuser->emailstop = 0;
         return self::$supportuser;
+    }
+
+    /**
+     * Return disguised user record.
+     *
+     * $CFG->disguiseduserid is set then returns user record
+     * $CFG->disguisedemail is set then return dummy record with $CFG->disguisedemail
+     *
+     * @param stdClass $user                         A {@link $USER} object to get full name of.
+     * @param context  $context                      The context at which the user is being displayed
+     *
+     * @return stdClass user record.
+     */
+    public static function get_disguised_user(\stdClass $user, \context $context) {
+        global $CFG;
+
+        if ($context === null) {
+            // No context specified - use page context instead.
+            $context = $PAGE->context;
+        }
+
+        if ($context && !$context->has_disguise()) {
+            return $user;
+        }
+
+        if (!empty(self::$disguiseduser)) {
+            return self::$disguiseduser;
+        }
+
+        // If custom disguised user is set then use it, else if disguisedemail is set then use it, else use noreply.
+        if (!empty($CFG->disguiseduserid)) {
+            self::$disguiseduser = self::get_user($CFG->disguiseduserid, '*', MUST_EXIST);
+        }
+
+        // Try sending it to disguised email if disguised user is not set.
+        if (empty(self::$disguiseduser)) {
+            self::$disguiseduser = self::get_dummy_user_record();
+            self::$disguiseduser->id = self::DISGUISED_USER;
+            if (!empty($CFG->disguisedemail)) {
+                self::$disguiseduser->email = $CFG->disguisedemail;
+            }
+            if (!empty($CFG->disguisedname)) {
+                self::$disguiseduser->firstname = $CFG->disguisedname;
+            }
+            self::$disguiseduser->username = '';
+            self::$disguiseduser->maildisplay = '0';
+            self::$disguiseduser->emailstop = 0;
+        }
+
+        // Unset emailstop to make sure disguised message is sent.
+        return self::$disguiseduser;
     }
 
     /**
@@ -1226,4 +1283,95 @@ class core_user {
         };
         return null;
     }
+
+    /**
+     * Run a dynamic function with function name as a parameter.
+     *
+     * @param string $functionname The function name to be called.
+     */
+    public static function get_user_details($user, \context $context = null,
+                                            array $options, string $functionname): string {
+        // Make sure we have a user object.
+        $user = is_object($user) ? $user : self::get_user($user);
+
+        // Use basic class only.
+        if (isset($options["core_only"])) {
+            $classname = \core\plugininfo\userdetails::get_classname("basic");
+            $plugin = new $classname();
+            return $plugin->$functionname($user, $context, $options);
+        }
+
+        // Return user details.
+        $plugins = \core\plugininfo\userdetails::get_enabled_plugins();
+        foreach ($plugins as $pluginname) {
+            $classname = \core\plugininfo\userdetails::get_classname($pluginname);
+            $plugin = new $classname();
+            // Check if the function exists in a class.
+            if (method_exists($classname, $functionname)) {
+                $userdetails = $plugin->$functionname($user, $context, $options);
+                if (!empty($userdetails)) {
+                    return $userdetails;
+                }
+            }
+        }
+        return '';
+    }
+
+    /**
+     * Returns a persons full name depending on the user details plugins.
+     *
+     * @param int|stdClass $user A {@link $USER} object to get full name of.
+     * @param context|null $context The context at which the user is being displayed
+     * @param array $options The options to configure how the name is displayed
+     *
+     * @return string
+     */
+    public static function displayname($user, \context $context = null, array $options = []) {
+        return self::get_user_details($user, $context, $options, 'get_full_name');
+    }
+
+    /**
+     * Returns a profile url for a user depending on user details plugins.
+     */
+    public static function profile_url($user, \context $context = null, array $options = []) {
+        return self::get_user_details($user, $context, $options, 'get_profile_url');
+    }
+
+    /**
+     * Returns a profile picture for a user depending on user details plugins.
+     */
+    public static function profile_picture($user, \context $context = null, array $options = []) {
+        return self::get_user_details($user, $context, $options, 'get_profile_picture');
+    }
+
+    /**
+     * Returns real display name for a user depending on user details plugins.
+     *
+     */
+    public static function real_displayname($user, \context $context = null, array $options = []) {
+        $options["core_only"] = true;
+        return self::get_user_details($user, $context, $options, 'get_full_name');
+    }
+
+    /**
+     * Return user id.
+     */
+    public static function user_id($user, \context $context = null, array $options = []) {
+        return self::get_user_details($user, $context, $options, 'get_user_id');
+    }
+
+    /**
+     * Return user email.
+     */
+    public static function user_email($user, \context $context = null, array $options = []) {
+        return self::get_user_details($user, $context, $options, 'get_user_email');
+    }
+
+    /**
+     * Return ip address depending on user details plugins.
+     */
+    public static function ip_address($user, \context $context = null, array $options = []) {
+        return self::get_user_details($user, $context, $options, 'get_ip_address');
+    }
+
 }

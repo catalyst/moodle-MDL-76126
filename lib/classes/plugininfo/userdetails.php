@@ -1,0 +1,84 @@
+<?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * Defines classes used for plugin info.
+ *
+ * @package    core
+ * @copyright  2013 Petr Skoda {@link http://skodak.org}
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+namespace core\plugininfo;
+
+use moodle_url;
+
+defined('MOODLE_INTERNAL') || die();
+
+/**
+ * Class for admin tool plugins
+ */
+class userdetails extends base {
+
+    /**
+     * Should there be a way to uninstall the plugin via the administration UI.
+     *
+     * Uninstallation is allowed for userdetails plugins.
+     *
+     * @return bool
+     */
+    public function is_uninstall_allowed() {
+        global $DB;
+
+        if (in_array($this->name, array('basic', 'disguise'))) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Get a list of enabled plugins and classes.
+     *
+     * @return  array List of enabled plugins.
+     */
+    public static function get_enabled_plugins(): array {
+        // Get active plugins in userdetails table sort by sortorder.
+        global $DB;
+        $plugins = $DB->get_records('userdetails', ['active' => true], 'sortorder ASC', 'plugin');
+        // Get array of plugin names.
+        $plugins = array_keys($plugins);
+
+        return $plugins;
+    }
+
+    /**
+     * Return URL used for management of plugins of this type.
+     * @return moodle_url
+     */
+    public static function get_manage_url() {
+        return new moodle_url('/user/userdetails/index.php');
+    }
+
+    /**
+     * Return the class name for the plugin.
+     *
+     * @param   string $plugin
+     * @return  string
+     */
+    public static function get_classname($plugin) {
+        return "\\userdetails_{$plugin}\\operator";
+    }
+}
