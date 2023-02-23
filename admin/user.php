@@ -406,7 +406,7 @@
             $profileurl = \core_user::display_profile_url($user, context_course::instance(SITEID));
             $row[] = "<a href=\"$profileurl\">$fullname</a>";
             foreach ($extracolumns as $field) {
-                $row[] = s($user->{$field});
+                $row[] = \core_user::display_user_field($field, $user, context_course::instance(SITEID));
             }
             $row[] = $user->city;
             $row[] = $user->country;

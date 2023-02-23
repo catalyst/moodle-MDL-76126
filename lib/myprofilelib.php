@@ -154,7 +154,7 @@ function core_myprofile_navigation(core_user\output\myprofile\tree $tree, $user,
         ))
         or (isset($identityfields['email']))
        ) {
-        $maildisplay = obfuscate_mailto($user->email, '');
+        $maildisplay = obfuscate_mailto(core_user::display_user_email($user, $courseorsystemcontext));
         if ($iscurrentuser) {
             if ($user->maildisplay == core_user::MAILDISPLAY_EVERYONE) {
                 $maildisplay .= ' ' . get_string('emaildisplayeveryone');

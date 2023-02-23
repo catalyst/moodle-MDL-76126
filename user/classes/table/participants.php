@@ -394,7 +394,7 @@ class participants extends \table_sql implements dynamic_table {
             return '';
         }
 
-        return s($data->{$colname});
+        return \core_user::display_user_field($colname, $data, $this->context);
     }
 
     /**
