@@ -1183,8 +1183,9 @@ class core_course_renderer extends plugin_renderer_base {
                     return $role->displayname;
                 }, $coursecontact['roles']);
                 $name = html_writer::tag('span', implode(", ", $rolenames).': ', ['class' => 'font-weight-bold']);
-                $name .= html_writer::link(new moodle_url('/user/view.php',
-                        ['id' => $coursecontact['user']->id, 'course' => SITEID]),
+                $name .= html_writer::link(new moodle_url(
+                    \core_user::display_profile_url($coursecontact['user'], context_course::instance(SITEID), [])
+                ),
                         $coursecontact['username']);
                 $content .= html_writer::tag('li', $name);
             }

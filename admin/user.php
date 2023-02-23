@@ -403,7 +403,8 @@
             $fullname = fullname($user, true);
 
             $row = array ();
-            $row[] = "<a href=\"../user/view.php?id=$user->id&amp;course=$site->id\">$fullname</a>";
+            $profileurl = \core_user::display_profile_url($user, context_course::instance(SITEID));
+            $row[] = "<a href=\"$profileurl\">$fullname</a>";
             foreach ($extracolumns as $field) {
                 $row[] = s($user->{$field});
             }
