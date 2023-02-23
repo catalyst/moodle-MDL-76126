@@ -2605,16 +2605,11 @@ class core_renderer extends renderer_base {
      *     - visibletoscreenreaders=true (whether to be visible to screen readers)
      *     - includefullname=false (whether to include the user's full name together with the user picture)
      *     - includetoken = false (whether to use a token for authentication. True for current user, int value for other user id)
+     * @param context|null $context The context at which the user info is being displayed
      * @return string HTML fragment
      */
-    public function user_picture(stdClass $user, array $options = null) {
-        $userpicture = new user_picture($user);
-        foreach ((array)$options as $key=>$value) {
-            if (property_exists($userpicture, $key)) {
-                $userpicture->$key = $value;
-            }
-        }
-        return $this->render($userpicture);
+    public function user_picture(stdClass $user, array $options = [], \context $context = null) {
+        return \core_user::display_profile_picture($user, $context, $options);
     }
 
     /**
@@ -5648,9 +5643,10 @@ class core_renderer_maintenance extends core_renderer {
      *
      * @param stdClass $user
      * @param array $options
+     * @param context|null $context The context at which the user info is being displayed
      * @return string
      */
-    public function user_picture(stdClass $user, array $options = null) {
+    public function user_picture(stdClass $user, array $options = null, \context $context = null) {
         return '';
     }
 }
