@@ -378,8 +378,11 @@ function core_myprofile_navigation(core_user\output\myprofile\tree $tree, $user,
     // Last ip.
     if (has_capability('moodle/user:viewlastip', $usercontext) && !isset($hiddenfields['lastip'])) {
         if ($user->lastip) {
-            $iplookupurl = new moodle_url('/iplookup/index.php', array('ip' => $user->lastip, 'user' => $user->id));
-            $ipstring = html_writer::link($iplookupurl, $user->lastip);
+            $iplookupurl = new moodle_url('/iplookup/index.php', [
+                'ip' => \core_user::display_user_lastip($user, $courseorsystemcontext),
+                'user' => $user->id
+            ]);
+            $ipstring = html_writer::link($iplookupurl, \core_user::display_user_lastip($user, $courseorsystemcontext));
         } else {
             $ipstring = get_string("none");
         }
