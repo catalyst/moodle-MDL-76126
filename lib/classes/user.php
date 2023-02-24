@@ -1226,4 +1226,17 @@ class core_user {
         };
         return null;
     }
+
+    /**
+     * Create userdisplay {@link \core_user\display\displayable} object to show user details depending on context.
+     *
+     * @param int|stdClass $user User object or id
+     * @param context $context Context where user details are displayed
+     * @return \core_user\display\userdisplay
+     */
+    public static function create_user_display_object($user, context $context = null): \core_user\display\displayable {
+        // Later on, we may want to return different displayable objects depending on the context.
+        return $userdisplay = \core_user\display\userdisplay::create($user, $context);
+    }
+
 }
