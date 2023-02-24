@@ -1592,7 +1592,6 @@ class core_user {
         return $user->department;
     }
 
-
     /**
      * Return user idnumber depending on context.
      * This function should be used for displaying purposes only as the details may not be the same as it is on database.
@@ -1607,6 +1606,19 @@ class core_user {
         $user = is_object($user) ? $user : self::get_user($user);
 
         return $user->idnumber;
+    }
+
+    public static function display_user($user, \context $context = null, array $options = []): \stdClass {
+        // Make sure we have a user object.
+        $user = is_object($user) ? $user : self::get_user($user);
+
+        // Loop through each user property.
+        $vars = get_object_vars($user);
+        foreach ($vars as $key => $val) {
+            $user->$key = self::display_user_field($key, $user, $context, $options);
+        }
+
+        return $user;
     }
 
     /**
@@ -1650,9 +1662,9 @@ class core_user {
                 default:
                     return $user->$field;
             }
-
         }
 
+        // Return empty string if the field is not set.
         return '';
     }
 
