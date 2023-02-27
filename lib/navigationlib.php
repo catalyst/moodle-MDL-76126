@@ -2529,7 +2529,7 @@ class global_navigation extends navigation_node {
         // Now, conditionally add the user node.
         if ($viewprofile) {
             $canseefullname = has_capability('moodle/site:viewfullnames', $coursecontext);
-            $usernode = $usersnode->add(fullname($user, $canseefullname), $userviewurl, self::TYPE_USER, null, 'user' . $user->id);
+            $usernode = $usersnode->add(fullname($user, $canseefullname, $coursecontext), $userviewurl, self::TYPE_USER, null, 'user' . $user->id);
         } else {
             $usernode = $usersnode->add(get_string('user'));
         }
@@ -5045,7 +5045,7 @@ class settings_navigation extends navigation_node {
             }
         }
 
-        $fullname = fullname($user, has_capability('moodle/site:viewfullnames', $this->page->context));
+        $fullname = fullname($user, has_capability('moodle/site:viewfullnames', $this->page->context), $this->page->context);
 
         $key = $gstitle;
         $prefurl = new moodle_url('/user/preferences.php');

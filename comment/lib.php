@@ -582,7 +582,7 @@ class comment {
             $c->format      = $u->cformat;
             $c->timecreated = $u->ctimecreated;
             $c->strftimeformat = get_string('strftimerecentfull', 'langconfig');
-            $url = new moodle_url('/user/view.php', array('id'=>$u->id, 'course'=>$this->courseid));
+            $url = new moodle_url(\core_user::create_user_display_object($u, $this->context)->profileurl);
             $c->profileurl = $url->out(false); // URL should not be escaped just yet.
             $c->fullname = fullname($u);
             $c->time = userdate($c->timecreated, $c->strftimeformat);
@@ -717,8 +717,7 @@ class comment {
             $newcmt->id = $cmt_id;
             $newcmt->strftimeformat = get_string('strftimerecentfull', 'langconfig');
             $newcmt->fullname = fullname($USER);
-            $url = new moodle_url('/user/view.php', array('id' => $USER->id, 'course' => $this->courseid));
-            $newcmt->profileurl = $url->out();
+            $newcmt->profileurl = \core_user::get_profile_url($USER->id, $this->context)->out();
             $formatoptions = array('overflowdiv' => true, 'blanktarget' => true);
             $newcmt->content = format_text($newcmt->content, $newcmt->format, $formatoptions);
             $newcmt->avatar = $OUTPUT->user_picture($USER, array('size'=>16));

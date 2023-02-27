@@ -3091,7 +3091,7 @@ abstract class enrol_plugin {
 
             $user = $DB->get_record('user', array('id'=>$ue->userid));
 
-            $users[] = array('fullname'=>fullname($user, has_capability('moodle/site:viewfullnames', $context, $enroller)), 'timeend'=>$ue->timeend);
+            $users[] = array('fullname'=>fullname($user, has_capability('moodle/site:viewfullnames', $context, $enroller), $context), 'timeend'=>$ue->timeend);
 
             if (!$ue->notifyall) {
                 continue;
@@ -3152,9 +3152,9 @@ abstract class enrol_plugin {
 
         $a = new stdClass();
         $a->course   = format_string($ue->fullname, true, array('context'=>$context));
-        $a->user     = fullname($user, true);
+        $a->user     = fullname($user, true, $context);
         $a->timeend  = userdate($ue->timeend, '', $user->timezone);
-        $a->enroller = fullname($enroller, has_capability('moodle/site:viewfullnames', $context, $user));
+        $a->enroller = fullname($enroller, has_capability('moodle/site:viewfullnames', $context, $user), $context);
 
         $subject = get_string('expirymessageenrolledsubject', 'enrol_'.$name, $a);
         $body = get_string('expirymessageenrolledbody', 'enrol_'.$name, $a);

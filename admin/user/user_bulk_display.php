@@ -74,8 +74,7 @@ foreach ($columns as $column) {
 
 foreach($users as $user) {
     $table->data[] = array (
-        '<a href="'.$CFG->wwwroot.'/user/view.php?id='.$user->id.'&amp;course='.SITEID.'">'.$user->fullname.'</a>',
-//        $user->username,
+        \core_user::get_profile_url_link($user, \context_system::instance(), [], true),
         s($user->email),
         $user->city,
         $user->country,

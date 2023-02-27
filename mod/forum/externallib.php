@@ -465,7 +465,7 @@ class mod_forum_external extends external_api {
                     $user = username_load_fields_from_object($user, $discussion, null, $picturefields);
                     // Preserve the id, it can be modified by username_load_fields_from_object.
                     $user->id = $discussion->userid;
-                    $discussion->userfullname = fullname($user, $canviewfullname);
+                    $discussion->userfullname = fullname($user, $canviewfullname, $modcontext);
 
                     $userpicture = new user_picture($user);
                     $userpicture->size = 1; // Size f1.
@@ -476,7 +476,7 @@ class mod_forum_external extends external_api {
                     $usermodified = username_load_fields_from_object($usermodified, $discussion, 'um', $picturefields);
                     // Preserve the id (it can be overwritten due to the prefixed $picturefields).
                     $usermodified->id = $discussion->usermodified;
-                    $discussion->usermodifiedfullname = fullname($usermodified, $canviewfullname);
+                    $discussion->usermodifiedfullname = fullname($usermodified, $canviewfullname, $modcontext);
 
                     $userpicture = new user_picture($usermodified);
                     $userpicture->size = 1; // Size f1.

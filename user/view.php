@@ -105,7 +105,7 @@ $strpersonalprofile = get_string('personalprofile');
 $strparticipants = get_string("participants");
 $struser = get_string("user");
 
-$fullname = fullname($user, has_capability('moodle/site:viewfullnames', $coursecontext));
+$fullname = fullname($user, has_capability('moodle/site:viewfullnames', $coursecontext), $coursecontext);
 
 // Now test the actual capabilities and enrolment in course.
 if ($currentuser) {

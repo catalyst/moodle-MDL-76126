@@ -395,13 +395,12 @@ class url {
      *
      * @param author_entity $author The author
      * @param int $courseid The course id
+     * @param context|null $context $context forum context
      * @return moodle_url
      */
-    public function get_author_profile_url(author_entity $author, int $courseid) : moodle_url {
-        return new moodle_url('/user/view.php', [
-            'id' => $author->get_id(),
-            'course' => $courseid
-        ]);
+    public function get_author_profile_url(author_entity $author, int $courseid, \context $context = null) : moodle_url {
+        return new moodle_url(\core_user::create_user_display_object($author->get_id(), $context)
+            ->get_profile_url(['courseid' => $courseid]));
     }
 
     /**

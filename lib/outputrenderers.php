@@ -2672,7 +2672,7 @@ class core_renderer extends renderer_base {
 
         // Show fullname together with the picture when desired.
         if ($userpicture->includefullname) {
-            $output .= fullname($userpicture->user, $canviewfullnames);
+            $output .= fullname($userpicture->user, $canviewfullnames, $this->page->context);
         }
 
         if (empty($userpicture->courseid)) {

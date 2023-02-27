@@ -70,9 +70,8 @@ class core_blog_renderer extends plugin_renderer_base {
 
         // Post by.
         $by = new stdClass();
-        $fullname = fullname($entry->renderable->user, has_capability('moodle/site:viewfullnames', $syscontext));
-        $userurlparams = array('id' => $entry->renderable->user->id, 'course' => $this->page->course->id);
-        $by->name = html_writer::link(new moodle_url('/user/view.php', $userurlparams), $fullname);
+        $by->name = \core_user::get_profile_url_link($entry->renderable->user, $syscontext,
+            ['courseid' => $this->page->course->id], has_capability('moodle/site:viewfullnames', $syscontext));
 
         $by->date = userdate($entry->created);
         $o .= $this->output->container(get_string('bynameondate', 'forum', $by), 'author');

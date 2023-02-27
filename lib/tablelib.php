@@ -856,7 +856,7 @@ class flexible_table {
     function col_fullname($row) {
         global $COURSE;
 
-        $name = fullname($row, has_capability('moodle/site:viewfullnames', $this->get_context()));
+        $name = fullname($row, has_capability('moodle/site:viewfullnames', $this->get_context()), $this->get_context());
         if ($this->download) {
             return $name;
         }

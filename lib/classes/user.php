@@ -1239,4 +1239,23 @@ class core_user {
         return $userdisplay = \core_user\display\userdisplay::create($user, $context);
     }
 
+    /**
+     * Frequent user profile fields.
+     */
+    public static function get_profile_url($user, context $context = null, $options = []): \moodle_url {
+        return new \moodle_url(
+            self::create_user_display_object($user, $context)->get_profile_url($options)
+        );
+    }
+
+    /**
+     * Frequent user profile fields.
+     */
+    public static function get_profile_url_link($user, context $context = null, $options = [], $override = false): string {
+        return \html_writer::link(
+                \core_user::get_profile_url($user, $context, $options),
+                fullname($user, $override, $context)
+        );
+    }
+
 }

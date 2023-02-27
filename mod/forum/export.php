@@ -145,12 +145,12 @@ if ($form->is_cancelled()) {
 
                 if ($field == 'userfullname') {
                     $user = \core_user::get_user($data->userid);
-                    $data->userfullname = fullname($user, $canviewfullname);
+                    $data->userfullname = fullname($user, $canviewfullname, $context);
                 }
 
                 if ($field == 'privatereplytofullname' && !empty($data->privatereplyto)) {
                     $user = \core_user::get_user($data->privatereplyto);
-                    $data->privatereplytofullname = fullname($user, $canviewfullname);
+                    $data->privatereplytofullname = fullname($user, $canviewfullname, $context);
                 }
 
                 if ($field == 'message') {

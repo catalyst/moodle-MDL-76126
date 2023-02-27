@@ -189,12 +189,15 @@ class userdisplay implements displayable {
         // Params to be passed to the user view page.
         $params = ['id' => $user->id];
 
-        // Check if the context is a course context.
-        if (isset($options['courseid'])) {
-            $params['courseid'] = $options['courseid'];
-        } else if (isset($context) && $context->contextlevel == CONTEXT_COURSE) {
-            // Course id to the params.
-            $params['courseid'] = $context->instanceid;
+        // Merge options to params
+        $params = array_merge($params, $options);
+
+        // Get courseid if not provided.
+        if (!isset($params['courseid'])) {
+            if (isset($context) && $context->contextlevel == CONTEXT_COURSE) {
+                // Course id to the params.
+                $params['courseid'] = $context->instanceid;
+            }
         }
 
         // Profile URL.

@@ -778,7 +778,8 @@ function blog_get_headers($courseid=null, $groupid=null, $userid=null, $tagid=nu
 
         // Course module navigation is handled by build_navigation as the second param.
         $headers['cm'] = $cm;
-        $PAGE->navbar->add(fullname($user), "$CFG->wwwroot/user/view.php?id=$user->id");
+
+        $PAGE->navbar->add(fullname($user), \core_user::get_profile_url($user, \context_system::instance())->out());
         $PAGE->navbar->add($strblogentries, $blogurl);
 
         $PAGE->set_title("$shortname: $cm->name: " . fullname($user) . ': ' . get_string('blogentries', 'blog'));
@@ -1142,8 +1143,7 @@ function blog_get_tagged_posts($tag, $exclusivemode = false, $fromctx = 0, $ctx 
 
                 $fullname = fullname($user);
                 if (user_can_view_profile($user)) {
-                    $profilelink = new moodle_url('/user/view.php', array('id' => $blog->userid));
-                    $fullname = html_writer::link($profilelink, $fullname);
+                    $fullname = \core_user::get_profile_url_link($blog->userid, $blog->contextid);
                 }
                 $details = $fullname . ', ' . userdate($blog->created);
 

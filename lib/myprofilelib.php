@@ -253,7 +253,7 @@ function core_myprofile_navigation(core_user\output\myprofile\tree $tree, $user,
                         if ($showallcourses) {
                             $params['showallcourses'] = 1;
                         }
-                        $url = new moodle_url('/user/view.php', $params);
+                        $url = \core_user::get_profile_url($user, $ccontext, $params);
                         $courselisting .= html_writer::tag('li', html_writer::link($url, $ccontext->get_context_name(false),
                                 $linkattributes));
                     } else {
@@ -264,8 +264,8 @@ function core_myprofile_navigation(core_user\output\myprofile\tree $tree, $user,
                 if (!$showallcourses && $shown == $CFG->navcourselimit) {
                     $url = null;
                     if (isset($course)) {
-                        $url = new moodle_url('/user/view.php',
-                                array('id' => $user->id, 'course' => $course->id, 'showallcourses' => 1));
+                        $url = \core_user::get_profile_url($user, $context,
+                            ["courseid" => $course->id, 'showallcourses' => 1]);
                     } else {
                         $url = new moodle_url('/user/profile.php', array('id' => $user->id, 'showallcourses' => 1));
                     }

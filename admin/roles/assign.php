@@ -304,7 +304,7 @@ if ($roleid) {
             if (!empty($roleusers)) {
                 $strroleusers = array();
                 foreach ($roleusers as $user) {
-                    $strroleusers[] = '<a href="' . $CFG->wwwroot . '/user/view.php?id=' . $user->id . '" >' . fullname($user) . '</a>';
+                    $strroleusers[] = \core_user::get_profile_url_link($user, $context);
                 }
                 $roleholdernames[$roleid] = implode('<br />', $strroleusers);
                 $showroleholders = true;

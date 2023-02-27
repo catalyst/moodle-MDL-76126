@@ -490,8 +490,8 @@ class core_question_renderer extends plugin_renderer_base {
      */
     protected function action_author(question_attempt_step $step, question_display_options $options): string {
         if ($options->userinfoinhistory && $step->get_user_id() != $options->userinfoinhistory) {
-            return html_writer::link(
-                    new moodle_url('/user/view.php', ['id' => $step->get_user_id(), 'course' => $this->page->course->id]),
+            $profileurl = \core_user::create_user_display_object($step->get_user_id(), $this->page->context)->profile_url;
+            return html_writer::link( new moodle_url($profileurl),
                     $step->get_user_fullname(), ['class' => 'd-table-cell']);
         } else {
             return '';

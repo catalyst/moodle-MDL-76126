@@ -155,7 +155,7 @@ if ($courseid != SITEID) {
     echo $OUTPUT->header();
 
     if (!empty($user)) {
-        $backurl = new moodle_url('/user/view.php', ['id' => $user->id, 'course' => $courseid]);
+        $backurl = \core_user::get_profile_url($user, $context, ["courseid" => $courseid]);
         echo $OUTPUT->single_button($backurl, get_string('back'), 'get', ['class' => 'mb-3']);
 
         $headerinfo = array('heading' => fullname($user), 'user' => $user);

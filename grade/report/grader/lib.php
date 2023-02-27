@@ -277,7 +277,7 @@ class grade_report_grader extends grade_report {
                             $userfields = 'id, ' . $userfieldsapi->get_sql('', false, '', '', false)->selects;
                             $user = $DB->get_record('user', array('id' => $userid), $userfields);
                             $gradestr = new stdClass();
-                            $gradestr->username = fullname($user, $viewfullnames);
+                            $gradestr->username = fullname($user, $viewfullnames, $this->context);
                             $gradestr->itemname = $gradeitem->get_name();
                             $warnings[] = get_string($errorstr, 'grades', $gradestr);
                             if ($skip) {
@@ -680,13 +680,16 @@ class grade_report_grader extends grade_report {
             $usercell->header = true;
             $usercell->scope = 'row';
 
+            // Create user display object.
+            $userdisplay = \core_user::create_user_display_object($user, $this->context);
+
             if ($showuserimage) {
-                $usercell->text = $OUTPUT->user_picture($user, ['link' => false, 'visibletoscreenreaders' => false]);
+                $usercell->text = $userdisplay->get_picture(['link' => false, 'visibletoscreenreaders' => false]);
             }
 
-            $fullname = fullname($user, $viewfullnames);
-            $usercell->text = html_writer::link(
-                    new moodle_url('/user/view.php', ['id' => $user->id, 'course' => $this->course->id]),
+            $fullname = fullname($user, $viewfullnames, $this->context);
+
+            $usercell->text = html_writer::link(new moodle_url($userdisplay->profile_url),
                     $usercell->text . $fullname,
                     ['class' => 'username']
             );
@@ -738,7 +741,7 @@ class grade_report_grader extends grade_report {
                 $fieldcell = new html_table_cell();
                 $fieldcell->attributes['class'] = 'userfield user' . $field;
                 $fieldcell->header = false;
-                $fieldcell->text = s($user->{$field});
+                $fieldcell->text = s($userdisplay->{$field});
                 $userrow->cells[] = $fieldcell;
             }
 
@@ -936,7 +939,7 @@ class grade_report_grader extends grade_report {
             $itemrow = new html_table_row();
             $itemrow->id = 'user_'.$userid;
 
-            $fullname = fullname($user, $viewfullnames);
+            $fullname = fullname($user, $viewfullnames, $this->context);
 
             foreach ($this->gtree->items as $itemid => $unused) {
                 $item =& $this->gtree->items[$itemid];

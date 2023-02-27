@@ -157,7 +157,7 @@ class author extends exporter {
                     'isdeleted' => true,
                     'groups' => [],
                     'urls' => [
-                        'profile' => ($urlfactory->get_author_profile_url($author, $forum->get_course_id()))->out(false),
+                        'profile' => ($urlfactory->get_author_profile_url($author, $forum->get_course_id(), $context))->out(false),
                         'profileimage' => ($urlfactory->get_author_profile_image_url($author, $authorcontextid))->out(false)
                     ]
                 ];

@@ -136,9 +136,7 @@ foreach ($users as $user) {
         );
     } else {
         $table->data[] = array(
-            '<a href="' . $CFG->wwwroot . '/user/view.php?id=' . $user->id . '&amp;course=' . SITEID . '">' .
-            $user->fullname .
-            '</a>',
+            \core_user::get_profile_url_link($user, \context_system::instance(), [], true),
             s($user->email),
             $user->city,
             $user->country,
