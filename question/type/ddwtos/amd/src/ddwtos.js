@@ -363,6 +363,12 @@ define([
      * @param {jQuery} drop the place to put it.
      */
     DragDropToTextQuestion.prototype.sendDragToDrop = function(drag, drop) {
+        // Send drag home if there is no place in drop.
+        if (this.getPlace(drop) === null) {
+            this.sendDragHome(drag);
+            return;
+        }
+
         // Is there already a drag in this drop? if so, evict it.
         var oldDrag = this.getCurrentDragInPlace(this.getPlace(drop));
         if (oldDrag.length !== 0) {
