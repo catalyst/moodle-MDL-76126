@@ -13,6 +13,14 @@ class course_edit_form extends moodleform {
     protected $context;
 
     /**
+     * Get the course.
+     * @return course
+     */
+    public function get_course() {
+        return $this->course;
+    }
+
+    /**
      * Form definition.
      */
     function definition() {
@@ -386,6 +394,9 @@ class course_edit_form extends moodleform {
         $handler->set_parent_context($categorycontext); // For course handler only.
         $handler->instance_form_definition($mform, empty($course->id) ? 0 : $course->id);
 
+        // Apply any plugin extensions to this course.
+        $this->plugin_extend_course_standard_elements();
+
         // When two elements we need a group.
         $buttonarray = array();
         $classarray = array('class' => 'form-submit');
@@ -404,6 +415,18 @@ class course_edit_form extends moodleform {
         $handler->instance_form_before_set_data($course);
         // Finally set the current form data
         $this->set_data($course);
+    }
+
+    /**
+     * Plugins can extend the course settings form.
+     */
+    protected function plugin_extend_course_standard_elements() {
+        $callbacks = get_plugins_with_function('course_standard_elements', 'lib.php');
+        foreach ($callbacks as $type => $plugins) {
+            foreach ($plugins as $plugin => $pluginfunction) {
+                $pluginfunction($this, $this->_form);
+            }
+        }
     }
 
     /**
@@ -455,6 +478,21 @@ class course_edit_form extends moodleform {
         // Tweak the form with values provided by custom fields in use.
         $handler  = core_course\customfield\course_handler::create();
         $handler->instance_form_definition_after_data($mform, empty($courseid) ? 0 : $courseid);
+
+        // Apply any plugin extensions to this course.
+        $this->plugin_extend_course_definition_after_data();
+    }
+
+    /**
+     * Plugins can extend the course settings form after the data is set.
+     */
+    protected function plugin_extend_course_definition_after_data() {
+        $callbacks = get_plugins_with_function('course_definition_after_data', 'lib.php');
+        foreach ($callbacks as $type => $plugins) {
+            foreach ($plugins as $plugin => $pluginfunction) {
+                $pluginfunction($this, $this->_form);
+            }
+        }
     }
 
     /**
@@ -501,6 +539,34 @@ class course_edit_form extends moodleform {
         $handler = core_course\customfield\course_handler::create();
         $errors  = array_merge($errors, $handler->instance_form_validation($data, $files));
 
+        // Allow plugins to extend the course fields validation.
+        $pluginerrors = $this->plugin_extend_course_validation($data);
+        if (!empty($pluginerrors)) {
+            $errors = array_merge($errors, $pluginerrors);
+        }
+
+        return $errors;
+    }
+
+    /**
+     * Extend the validation function from any other plugin.
+     *
+     * @param stdClass $data The form data.
+     * @return array $errors The list of errors keyed by element name.
+     */
+    protected function plugin_extend_course_validation($data) {
+        $errors = array();
+
+        $callbacks = get_plugins_with_function('course_validation', 'lib.php');
+        foreach ($callbacks as $type => $plugins) {
+            foreach ($plugins as $plugin => $pluginfunction) {
+                // We have exposed all the important properties with public getters - the errors array should be pass by reference.
+                $pluginerrors = $pluginfunction($this, $data);
+                if (!empty($pluginerrors)) {
+                    $errors = array_merge($errors, $pluginerrors);
+                }
+            }
+        }
         return $errors;
     }
 }

@@ -2438,6 +2438,9 @@ function update_course($data, $editoroptions = NULL) {
     $handler = core_course\customfield\course_handler::create();
     $handler->instance_form_save($data);
 
+    // Allow plugins to extend the course data/oldcourse and handle form data.
+    $data = plugin_extend_course_edit_post_actions($data, $oldcourse);
+
     // Update with the new data
     $DB->update_record('course', $data);
     // make sure the modinfo cache is reset
@@ -2499,6 +2502,24 @@ function update_course($data, $editoroptions = NULL) {
         $DB->delete_records('course_format_options',
                 array('courseid' => $course->id, 'format' => $oldcourse->format));
     }
+}
+
+/**
+ * Hook for plugins to take action when a course is created or updated.
+ *
+ * @param stdClass $data the module info
+ * @param stdClass $oldcourse the previous course object source data
+ *
+ * @return stdClass data updated by plugins.
+ */
+function plugin_extend_course_edit_post_actions($data, $oldcourse) {
+    $callbacks = get_plugins_with_function('course_edit_post_actions', 'lib.php');
+    foreach ($callbacks as $type => $plugins) {
+        foreach ($plugins as $plugin => $pluginfunction) {
+            $data = $pluginfunction($data, $oldcourse);
+        }
+    }
+    return $data;
 }
 
 /**
